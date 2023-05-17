@@ -1,0 +1,11 @@
+altgraph==0.17.3
+asstosrt==0.1.6
+importlib-metadata==6.6.0
+pefile==2023.2.7
+Pillow==9.5.0
+pyinstaller==5.11.0
+pyinstaller-hooks-contrib==2023.3
+pysubs2==1.6.1
+pywin32-ctypes==0.2.0
+typing-extensions==4.5.0
+zipp==3.15.0
