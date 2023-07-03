@@ -8,7 +8,10 @@ import pysubs2
 import tkinter
 import sys
 import os
-# pyinstaller --noconfirm --onefile --noconsole --add-data 'background.png;.' --add-data 'ico.ico;.' --icon=ico.ico SRTwithROLES.py
+from tkinterdnd2 import TkinterDnD, DND_FILES
+from tktooltip import ToolTip
+import tkinter.messagebox
+# pyinstaller --noconfirm --onefile --noconsole --add-data "venv/lib/site-packages/tkinterdnd2;tkinterdnd2/" --add-data 'background.png;.' --add-data 'ico.ico;.' --icon=ico.ico SRTwithROLES.py
 
 
 def ass_sub_convert(subs: str) -> None:
@@ -30,7 +33,7 @@ def resource_path(path):
 
 def path_choice() -> str or None:
     defaultextension = 'ass'
-    filetypes = [('.ass', '*.ass')]
+    filetypes = [('Субтитры ".ass"', '*.ass')]
     title = 'Выберите файл субтитров'
     path = filedialog.askopenfilename(
         defaultextension=defaultextension,
@@ -52,12 +55,35 @@ def subs_edit() -> None:
         os.remove(subs)
 
 
+def subs_edit_on_drop(subs) -> None:
+    subtitles = pysubs2.load(subs)
+    for sub in subtitles.events:
+        if sub.name:
+            sub.text = f'"{sub.name}": {sub.text}'
+    subtitles.save(subs)
+    ass_sub_convert(subs)
+    os.remove(subs)
+
+
 def on_start_click():
     thread = Thread(target=subs_edit)
     thread.start()
 
 
-master = tkinter.Tk()
+def on_drop(event):
+    data = event.data.replace('{', '')
+    data = data.replace('}', '')
+    if os.path.splitext(data)[-1] == '.ass':
+        thread = Thread(target=subs_edit_on_drop, args=(data,))
+        thread.start()
+    else:
+        tkinter.messagebox.showerror(
+            'Ошибка',
+            'Выберите ".ass" файл'
+        )
+
+
+master = TkinterDnD.Tk()
 width = 300
 height = 200
 s_width = master.winfo_screenwidth()
@@ -67,7 +93,7 @@ x = (s_width - width) // 2
 y = (s_height - height) // 2
 master.geometry(f'{width}x{height}+{x}+{y - upper}')
 master.resizable(width=False, height=False)
-master.title('SRT WITH ROLES v0.03')
+master.title('SRT WITH ROLES v0.04')
 master.iconbitmap(default=resource_path('ico.ico'))
 master.configure(background='#7ce6ef')
 img = Image.open(resource_path('background.png'))
@@ -83,6 +109,9 @@ start_bttn = ttk.Button(
     command=lambda: on_start_click()
 )
 start_bttn.place(relx=0.5, rely=1.0, anchor="s", y=-9)
+ToolTip(start_bttn, 'Выберите файл или перетащите его в окно', 1)
+master.drop_target_register(DND_FILES)
+master.dnd_bind('<<Drop>>', on_drop)
 
 if __name__ == '__main__':
     freeze_support()
